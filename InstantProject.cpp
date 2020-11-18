@@ -59,13 +59,12 @@ int main()
 			switch (commands[runtimePos])
 			{
 			case '>':
-				pointer = pointer < sizeof(memCell) / sizeof(*memCell) ?
-					pointer++ : pointer = 0;
+				pointer = (pointer < sizeof(memCell) / sizeof(*memCell)) ? pointer + 1 : 0;
 				break;
 
 			case '<':
-				pointer = pointer >= 0 ?
-					pointer-- : pointer = sizeof(memCell) / sizeof(*memCell) - 1;
+				pointer = pointer > 0 ?
+					pointer - 1 : sizeof(memCell) / sizeof(*memCell) - 1;
 				break;
 
 			case '+':
@@ -113,8 +112,26 @@ int main()
 			{
 				greenLight = true;
 			}
-		cout << (int)runtimePos << ": " << commands[runtimePos] << endl;
-		cout << "memCell[" << pointer << "]:" << (int)memCell[pointer];
+		//cout << (int)runtimePos << ": " << commands[runtimePos] << endl;
+		system("cls");
+		for (int i = 0; i < sizeof(memCell) / sizeof(*memCell); i++)
+		{
+			cout << i << '\t';
+		}
+		cout << endl;
+		for (int i = 0; i < sizeof(memCell) / sizeof(*memCell); i++)
+		{
+			cout << (int)memCell[i] << '\t';
+		}
+		cout << endl;
+		for (int i = 0; i < sizeof(memCell) / sizeof(*memCell); i++)
+		{
+			if (i == pointer)
+			cout << "|";
+			cout << '\t';
+		}
+
+		//cout << "memCell[" << pointer << "]: " << (int)memCell[pointer] << endl;
 		cin.get();
 	}
 }
