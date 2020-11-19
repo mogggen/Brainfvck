@@ -6,20 +6,28 @@
 
 using namespace std;
 
-vector<string> linesFromFile()
+void trim(string& val)
 {
-	vector<string> all;
-	string temp;
-	ifstream rfile;
-	rfile.open("Hello.bf");
-	if (rfile.is_open()) {
-		int i = 0;
-		while (getline(rfile, temp)) {
-			all.push_back(temp);
+	for (size_t i = 0; i < val.size(); i++)
+	{
+		switch (val[i])
+		{
+		case '>':
+		case '<':
+		case '+':
+		case '-':
+		case '.':
+		case ',':
+		case '[':
+		case ']':
+			break;
+
+		default:
+			val.replace(val.cbegin() + i, val.cbegin() + i + 1, "");
+			i--;
+			break;
 		}
-		rfile.close();
 	}
-	return all;
 }
 
 string arrToString(vector<string> vect)
@@ -32,27 +40,37 @@ string arrToString(vector<string> vect)
 	return temp;
 }
 
-static bool isIterating(stack<char> pair)
+string codeFromFile()
 {
-	
+	vector<string> all;
+	string line;
+	ifstream rfile;
+	rfile.open("../Hello.bf");
+	if (rfile.is_open()) {
+		int i = 0;
+		while (getline(rfile, line)) {
+			trim(line);
+			all.push_back(line);
+		}
+		rfile.close();
+	}
+	return arrToString(all);
 }
 
 int main()
 {
 	//file read and setup
 	string commands;
-	vector<string> lines;
-	stack<int> start;
+	stack<int> stack;
 
-	lines = linesFromFile();
-	commands = arrToString(lines);
+	commands = codeFromFile();
 
 	//compile
-	char memCell[16]; for (char i = 0; i < sizeof(memCell) / sizeof(*memCell); i++) memCell[i] = 0;
-	
+	unsigned char memCell[16]; for (char i = 0; i < sizeof(memCell) / sizeof(*memCell); i++) memCell[i] = 0;
+
 	int pointer = 0;
 	bool greenLight = true;
-	for (char runtimePos = 0; runtimePos < commands.size(); runtimePos++)
+	for (size_t runtimePos = 0; runtimePos < commands.size(); runtimePos++)
 	{
 		if (greenLight)
 		{
@@ -84,54 +102,46 @@ int main()
 				break;
 
 			case '[':
-				if (memCell[pointer] && runtimePos - 1 >= 0)
-				{
-					greenLight = true;
-					
-					start.push(runtimePos);
-				}
-				else
-				{
-					start.pop();
-					greenLight = false;
-				}
-				break;
-
-			default:
+				stack.push(runtimePos);
+				greenLight = memCell[pointer] && runtimePos - 1 >= 0;
 				break;
 			}
 
 		}
 		if (commands[runtimePos] == ']')
+		{
 			if (memCell[pointer])
-			{
-				runtimePos = start.top();
-				greenLight = true;
-			}
+				runtimePos = stack.top();
 			else
-			{
-				greenLight = true;
-			}
-		//cout << (int)runtimePos << ": " << commands[runtimePos] << endl;
-		system("cls");
-		for (int i = 0; i < sizeof(memCell) / sizeof(*memCell); i++)
-		{
-			cout << i << '\t';
+				stack.pop();
+			greenLight = true;
 		}
-		cout << endl;
-		for (int i = 0; i < sizeof(memCell) / sizeof(*memCell); i++)
-		{
-			cout << (int)memCell[i] << '\t';
-		}
-		cout << endl;
-		for (int i = 0; i < sizeof(memCell) / sizeof(*memCell); i++)
-		{
-			if (i == pointer)
-			cout << "|";
-			cout << '\t';
-		}
+		//cout << (int)runtimePos << ":\t" << commands[runtimePos] << endl;
 
-		//cout << "memCell[" << pointer << "]: " << (int)memCell[pointer] << endl;
-		cin.get();
+
+		if (false)
+		{
+			int i = 0;
+			system("cls");
+			cout << endl;
+			for (; i < sizeof(memCell) / sizeof(*memCell); i++)
+			{
+				cout << i << '\t';
+			}
+			cout << endl;
+			for (i = 0; i < sizeof(memCell) / sizeof(*memCell); i++)
+			{
+				cout << (int)memCell[i] << '\t';
+			}
+			cout << endl;
+			for (i = 0; i < sizeof(memCell) / sizeof(*memCell); i++)
+			{
+				if (i == pointer)
+					cout << "|";
+				cout << '\t';
+			}
+
+			cin.get();
+		}
 	}
 }
