@@ -40,21 +40,44 @@ string arrToString(vector<string> vect)
 	return temp;
 }
 
-string codeFromFile()
+void appendSymbols(string& commands)
 {
 	vector<string> all;
-	string line;
 	ifstream rfile;
 	rfile.open("../Hello.bf");
 	if (rfile.is_open()) {
 		int i = 0;
-		while (getline(rfile, line)) {
-			trim(line);
-			all.push_back(line);
+		while (getline(rfile, commands)) {
+			trim(commands);
+			all.push_back(commands);
 		}
 		rfile.close();
 	}
-	return arrToString(all);
+	commands = arrToString(all);
+}
+
+void debug(const uint8_t* memCell, const size_t pointer, const size_t totalmemlen)
+{
+	size_t i = 0;
+	cout << endl;
+	for (; i < totalmemlen; i++)
+	{
+		cout << i << '\t';
+	}
+	cout << endl;
+	for (i = 0; i < totalmemlen; i++)
+	{
+		cout << (int)memCell[i] << '\t';
+	}
+	cout << endl;
+	for (i = 0; i < totalmemlen; i++)
+	{
+		if (i == pointer)
+			cout << "|";
+		cout << '\t';
+	}
+
+	cin.get();
 }
 
 int main()
@@ -63,10 +86,10 @@ int main()
 	string commands;
 	stack<int> stack;
 
-	commands = codeFromFile();
+	appendSymbols(commands);
 
 	//compile
-	unsigned char memCell[16]; for (char i = 0; i < sizeof(memCell) / sizeof(*memCell); i++) memCell[i] = 0;
+	unsigned char memCell[5]; for (char i = 0; i < sizeof(memCell) / sizeof(*memCell); i++) memCell[i] = 0;
 
 	int pointer = 0;
 	bool greenLight = true;
@@ -115,33 +138,6 @@ int main()
 			else
 				stack.pop();
 			greenLight = true;
-		}
-		//cout << (int)runtimePos << ":\t" << commands[runtimePos] << endl;
-
-
-		if (false)
-		{
-			int i = 0;
-			system("cls");
-			cout << endl;
-			for (; i < sizeof(memCell) / sizeof(*memCell); i++)
-			{
-				cout << i << '\t';
-			}
-			cout << endl;
-			for (i = 0; i < sizeof(memCell) / sizeof(*memCell); i++)
-			{
-				cout << (int)memCell[i] << '\t';
-			}
-			cout << endl;
-			for (i = 0; i < sizeof(memCell) / sizeof(*memCell); i++)
-			{
-				if (i == pointer)
-					cout << "|";
-				cout << '\t';
-			}
-
-			cin.get();
 		}
 	}
 }
