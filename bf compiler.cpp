@@ -126,7 +126,7 @@ int main()
 
 			case '[':
 				stack.push(runtimePos);
-				greenLight = memCell[pointer] && runtimePos - 1 >= 0;
+				greenLight = memCell[pointer];
 				break;
 			}
 
