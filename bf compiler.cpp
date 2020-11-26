@@ -89,7 +89,7 @@ int main()
 	appendSymbols(commands);
 
 	//compile
-	unsigned char memCell[5]; for (char i = 0; i < sizeof(memCell) / sizeof(*memCell); i++) memCell[i] = 0;
+	unsigned char memCell[2048]; for (char i = 0; i < sizeof(memCell) / sizeof(*memCell); i++) memCell[i] = 0;
 
 	int pointer = 0;
 	bool greenLight = true;
