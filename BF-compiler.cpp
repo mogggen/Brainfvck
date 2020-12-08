@@ -33,9 +33,9 @@ void trim(string& val)
 string arrToString(vector<string> vect)
 {
 	string temp;
-	for (size_t i = 0; i < vect.size(); i++)
+	for each (string s in vect)
 	{
-		temp += vect[i];
+		temp += s;
 	}
 	return temp;
 }
@@ -89,9 +89,9 @@ int main()
 	appendSymbols(commands);
 
 	//compile
-	unsigned char memCell[2048]; for (char i = 0; i < sizeof(memCell) / sizeof(*memCell); i++) memCell[i] = 0;
+	vector<unsigned char> memCell(2048);
 
-	int pointer = 0;
+	long long pointer = 0;
 	bool greenLight = true;
 	for (size_t runtimePos = 0; runtimePos < commands.size(); runtimePos++)
 	{
@@ -100,12 +100,12 @@ int main()
 			switch (commands[runtimePos])
 			{
 			case '>':
-				pointer = (pointer < sizeof(memCell) / sizeof(*memCell)) ? pointer + 1 : 0;
+				pointer = (pointer < memCell.size()) ? pointer + 1 : 0;
 				break;
 
 			case '<':
 				pointer = pointer > 0 ?
-					pointer - 1 : sizeof(memCell) / sizeof(*memCell) - 1;
+					pointer - 1 : memCell.size() - 1;
 				break;
 
 			case '+':
