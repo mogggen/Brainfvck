@@ -6,7 +6,7 @@
 
 using namespace std;
 
-void trim(string& val)
+void compile(string& val)
 {
 	for (size_t i = 0; i < val.size(); i++)
 	{
@@ -40,7 +40,12 @@ string arrToString(vector<string> vect)
 	return temp;
 }
 
-void appendSymbols(string& commands)
+void readInput(string& out)
+{
+	cin >> out;
+}
+
+void readFile(string& commands)
 {
 	vector<string> all;
 	ifstream rfile;
@@ -48,7 +53,7 @@ void appendSymbols(string& commands)
 	if (rfile.is_open()) {
 		int i = 0;
 		while (getline(rfile, commands)) {
-			trim(commands);
+			compile(commands);
 			all.push_back(commands);
 		}
 		rfile.close();
@@ -56,7 +61,7 @@ void appendSymbols(string& commands)
 	commands = arrToString(all);
 }
 
-void debug(const uint8_t* memCell, const size_t pointer, const size_t totalmemlen)
+void debug(const vector<uint8_t> memCell, const size_t pointer, const size_t totalmemlen)
 {
 	size_t i = 0;
 	cout << endl;
@@ -86,10 +91,11 @@ int main()
 	string commands;
 	stack<int> stack;
 
-	appendSymbols(commands);
+	readInput(commands);
+	//readFile(commands);
 
 	//compile
-	vector<unsigned char> memCell(2048);
+	vector<unsigned char> memCell(8);
 
 	long long pointer = 0;
 	bool greenLight = true;
@@ -139,5 +145,6 @@ int main()
 				stack.pop();
 			greenLight = true;
 		}
+		debug(memCell, pointer, memCell.size());
 	}
 }
