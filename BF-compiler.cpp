@@ -95,7 +95,7 @@ int main()
 	//readFile(commands);
 
 	//compile
-	vector<unsigned char> memCell(8);
+	vector<unsigned char> memCell(8); //common memory size: 8
 
 	long long pointer = 0;
 	bool greenLight = true;
