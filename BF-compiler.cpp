@@ -45,11 +45,14 @@ void readInput(string& out)
 	cin >> out;
 }
 
-void readFile(string& commands)
+
+void readFile(string& commands, string file_name = "Hello.bf")
 {
 	vector<string> all;
 	ifstream rfile;
-	rfile.open("../Hello.bf");
+
+	rfile.open("../" + file_name);
+
 	if (rfile.is_open()) {
 		int i = 0;
 		while (getline(rfile, commands)) {
@@ -85,66 +88,133 @@ void debug(const vector<uint8_t> memCell, const size_t pointer, const size_t tot
 	cin.get();
 }
 
+void vanilla_compiler(string* commands, stack<int>* stack, vector<unsigned char>* memCell);
+
+void scaling_rgba_compiler(string* commands, stack<int>* stack, vector<unsigned char>* memCell);
+
 int main()
 {
 	//file read and setup
 	string commands;
 	stack<int> stack;
 
-	readInput(commands);
-	//readFile(commands);
+	//readInput(commands);
+	readFile(commands, "duel.bf");
 
 	//compile
 	vector<unsigned char> memCell(8); //common memory size: 8
 
+	//vanilla_compiler(&commands, &stack, &memCell);
+
+	scaling_rgba_compiler(&commands, &stack, &memCell);
+}
+
+void vanilla_compiler(string* commands, stack<int>* stack, vector<unsigned char>* memCell)
+{
 	long long pointer = 0;
 	bool greenLight = true;
-	for (size_t runtimePos = 0; runtimePos < commands.size(); runtimePos++)
+	for (size_t runtimePos = 0; runtimePos < commands->size(); runtimePos++)
 	{
 		if (greenLight)
 		{
-			switch (commands[runtimePos])
+			switch ((*commands)[runtimePos])
 			{
 			case '>':
-				pointer = (pointer < memCell.size()) ? pointer + 1 : 0;
+				pointer = (pointer < memCell->size()) ? pointer + 1 : 0;
 				break;
 
 			case '<':
 				pointer = pointer > 0 ?
-					pointer - 1 : memCell.size() - 1;
+					pointer - 1 : memCell->size() - 1;
 				break;
 
 			case '+':
-				memCell[pointer]++;
+				(*memCell)[pointer]++;
 				break;
 
 			case '-':
-				memCell[pointer]--;
+				(*memCell)[pointer]--;
 				break;
 
 			case '.':
-				cout << memCell[pointer];
+				cout << (*memCell)[pointer];
 				break;
 
 			case ',':
-				cin >> memCell[pointer];
+				cin >> (*memCell)[pointer];
 				break;
 
 			case '[':
-				stack.push(runtimePos);
-				greenLight = memCell[pointer];
+				stack->push(runtimePos);
+				greenLight = (*memCell)[pointer];
 				break;
 			}
 
 		}
-		if (commands[runtimePos] == ']')
+		if ((*commands)[runtimePos] == ']')
 		{
-			if (memCell[pointer])
-				runtimePos = stack.top();
+			if ((*memCell)[pointer])
+				runtimePos = stack->top();
 			else
-				stack.pop();
+				stack->pop();
 			greenLight = true;
 		}
-		debug(memCell, pointer, memCell.size());
+		debug(*memCell, pointer, memCell->size());
+	}
+}
+
+void scaling_rgba_compiler(string* commands, stack<int>* stack, vector<unsigned char>* memCell)
+{
+	long long pointer = 0;
+	bool greenLight = true;
+	for (size_t runtimePos = 0; runtimePos < commands->size(); runtimePos++)
+	{
+		if (greenLight)
+		{
+			switch ((*commands)[runtimePos])
+			{
+			case '>':
+				pointer = (pointer < memCell->size()) ? pointer + 1 : 0;
+				break;
+
+			case '<':
+				pointer = pointer > 0 ?
+					pointer - 1 : memCell->size() - 1;
+				break;
+
+			case '+':
+				(*memCell)[pointer]++;
+				break;
+
+			case '-':
+				(*memCell)[pointer]--;
+				break;
+
+			case '.':
+				//read from opponent buffer instead
+				//cout << (*memCell)[pointer];
+				break;
+
+			case ',':
+				// write to oppenent buffer instead
+				//cin >> (*memCell)[pointer];
+				break;
+
+			case '[':
+				stack->push(runtimePos);
+				greenLight = (*memCell)[pointer];
+				break;
+			}
+
+		}
+		if ((*commands)[runtimePos] == ']')
+		{
+			if ((*memCell)[pointer])
+				runtimePos = stack->top();
+			else
+				stack->pop();
+			greenLight = true;
+		}
+		debug(*memCell, pointer, memCell->size());
 	}
 }
