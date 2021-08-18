@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <ctime>
 #include <stack>
 #include <vector>
 
@@ -64,25 +65,32 @@ void readFile(string& commands, string file_name = "Hello.bf")
 	commands = arrToString(all);
 }
 
-void debug(const vector<uint8_t> memCell, const size_t pointer, const size_t totalmemlen)
+void debug(vector<uint8_t>* SelfmemCell, vector<uint8_t>* othermemCell, size_t pointer)
 {
 	size_t i = 0;
 	cout << endl;
-	for (; i < totalmemlen; i++)
+	for (; i < SelfmemCell->size(); i++)
 	{
 		cout << i << '\t';
 	}
 	cout << endl;
-	for (i = 0; i < totalmemlen; i++)
+	for (i = 0; i < SelfmemCell->size(); i++)
 	{
-		cout << (int)memCell[i] << '\t';
+		cout << (int)(*SelfmemCell)[i] << '\t';
 	}
 	cout << endl;
-	for (i = 0; i < totalmemlen; i++)
+	for (i = 0; i < SelfmemCell->size(); i++)
 	{
 		if (i == pointer)
+		{
 			cout << "|";
+		}
 		cout << '\t';
+	}
+	cout << endl;
+	for (i = 0; i < othermemCell->size(); i++)
+	{
+		cout << (int)(*othermemCell)[i] << '\t';
 	}
 
 	cin.get();
@@ -90,23 +98,103 @@ void debug(const vector<uint8_t> memCell, const size_t pointer, const size_t tot
 
 void vanilla_compiler(string* commands, stack<int>* stack, vector<unsigned char>* memCell);
 
-void scaling_rgba_compiler(string* commands, stack<int>* stack, vector<unsigned char>* memCell);
+void scaling_rgba_compiler(const int INIT_INDEX, string* commands, stack<int>* stack, vector<unsigned char>* selfMemCell, vector<unsigned char>* otherMemCell);
 
 int main()
 {
+	srand(time(0));
+	
 	//file read and setup
 	string commands;
+	string othercommands;
+	for (size_t i = 0; i < 4; i++)
+	{
+		othercommands = "";
+		
+		int tempLen = rand() % 5;
+		switch (rand() & 6)
+		{
+			case 0:
+				othercommands.append(">");
+				break;
+			case 1:
+				othercommands.append("<");
+				break;
+			case 2:
+				othercommands.append("+");
+				break;
+			case 3:
+				othercommands.append("-");
+				break;
+			case 4:
+				othercommands.append(".");
+				break;
+			case 5:
+				othercommands.append(",");
+				break;
+			default:
+			break;
+		}
+	}
+	
+	
 	stack<int> stack;
-
+	
 	//readInput(commands);
 	readFile(commands, "duel.bf");
 
 	//compile
-	vector<unsigned char> memCell(8); //common memory size: 8
+	int selfPointer = 0;
+	vector<unsigned char> SelfMemCell(8); //common memory size: 8
 
 	//vanilla_compiler(&commands, &stack, &memCell);
 
-	scaling_rgba_compiler(&commands, &stack, &memCell);
+	int otherPointer = 0;
+	vector<unsigned char> otherMemCell(8);
+
+	// turn based duel
+	int turn = 0;
+	while(turn < 1000)
+	{
+		turn++;
+		// commands should be loaded from a directory of Canvases
+		
+
+		if (turn >= commands.size())
+		{
+			if (turn % 2)
+			{
+				scaling_rgba_compiler(selfPointer, &commands, &stack, &SelfMemCell, &otherMemCell);
+
+				switch ((int)SelfMemCell[selfPointer])
+				{
+					case 0:
+						readFile(commands, "0.bf");
+						break;
+					case 1:
+						readFile(commands, "1.bf");
+						break;
+					case 2:
+						readFile(commands, "2.bf");
+						break;
+					case 3:
+						readFile(commands, "3.bf");
+						break;
+					case 4:
+						readFile(commands, "4.bf");
+						break;
+					default:
+						cout << SelfMemCell[selfPointer];
+						break;
+				}
+			}
+			else
+			{
+				scaling_rgba_compiler(otherPointer, &commands, &stack, &otherMemCell, &SelfMemCell);
+
+			}
+		}
+	}
 }
 
 void vanilla_compiler(string* commands, stack<int>* stack, vector<unsigned char>* memCell)
@@ -159,13 +247,13 @@ void vanilla_compiler(string* commands, stack<int>* stack, vector<unsigned char>
 				stack->pop();
 			greenLight = true;
 		}
-		debug(*memCell, pointer, memCell->size());
+		debug(memCell, nullptr, pointer);
 	}
 }
 
-void scaling_rgba_compiler(string* commands, stack<int>* stack, vector<unsigned char>* memCell)
+void scaling_rgba_compiler(const int INIT_INDEX, string* commands, stack<int>* stack, vector<unsigned char>* selfMemCell, vector<unsigned char>* otherMemCell)
 {
-	long long pointer = 0;
+	long long pointer = INIT_INDEX;
 	bool greenLight = true;
 	for (size_t runtimePos = 0; runtimePos < commands->size(); runtimePos++)
 	{
@@ -174,47 +262,47 @@ void scaling_rgba_compiler(string* commands, stack<int>* stack, vector<unsigned 
 			switch ((*commands)[runtimePos])
 			{
 			case '>':
-				pointer = (pointer < memCell->size()) ? pointer + 1 : 0;
+				pointer = (pointer < selfMemCell->size()) ? pointer + 1 : 0;
 				break;
 
 			case '<':
 				pointer = pointer > 0 ?
-					pointer - 1 : memCell->size() - 1;
+					pointer - 1 : selfMemCell->size() - 1;
 				break;
 
 			case '+':
-				(*memCell)[pointer]++;
+				(*selfMemCell)[pointer]++;
 				break;
 
 			case '-':
-				(*memCell)[pointer]--;
+				(*selfMemCell)[pointer]--;
 				break;
 
 			case '.':
 				//read from opponent buffer instead
-				//cout << (*memCell)[pointer];
+				(*selfMemCell)[pointer] = (*otherMemCell)[pointer];
 				break;
 
 			case ',':
 				// write to oppenent buffer instead
-				//cin >> (*memCell)[pointer];
+				(*otherMemCell)[pointer] = (*selfMemCell)[pointer];
 				break;
 
 			case '[':
 				stack->push(runtimePos);
-				greenLight = (*memCell)[pointer];
+				greenLight = (*selfMemCell)[pointer];
 				break;
 			}
 
 		}
 		if ((*commands)[runtimePos] == ']')
 		{
-			if ((*memCell)[pointer])
+			if ((*selfMemCell)[pointer])
 				runtimePos = stack->top();
 			else
 				stack->pop();
 			greenLight = true;
 		}
-		debug(*memCell, pointer, memCell->size());
+		debug(selfMemCell, otherMemCell, pointer);
 	}
 }
