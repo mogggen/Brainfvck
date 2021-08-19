@@ -44,6 +44,7 @@ string arrToString(vector<string> vect)
 void readInput(string& out)
 {
 	cin >> out;
+	compile(out);
 }
 
 
@@ -69,16 +70,11 @@ void debug(vector<uint8_t>* SelfmemCell, vector<uint8_t>* othermemCell, size_t p
 {
 	size_t i = 0;
 	cout << endl;
-	for (; i < SelfmemCell->size(); i++)
-	{
-		cout << i << '\t';
-	}
-	cout << endl;
 	for (i = 0; i < SelfmemCell->size(); i++)
 	{
 		cout << (int)(*SelfmemCell)[i] << '\t';
 	}
-	cout << endl;
+	cout << "Self" << endl;
 	for (i = 0; i < SelfmemCell->size(); i++)
 	{
 		if (i == pointer)
@@ -92,11 +88,22 @@ void debug(vector<uint8_t>* SelfmemCell, vector<uint8_t>* othermemCell, size_t p
 	{
 		cout << (int)(*othermemCell)[i] << '\t';
 	}
-
+	cout << "Other";
 	cin.get();
 }
 
 void vanilla_compiler(string* commands, stack<int>* stack, vector<unsigned char>* memCell);
+
+enum player
+{
+	self = 0,
+	other = 1,
+};
+
+void step_simulation()
+{
+
+}
 
 void scaling_rgba_compiler(const int INIT_INDEX, string* commands, stack<int>* stack, vector<unsigned char>* selfMemCell, vector<unsigned char>* otherMemCell);
 
@@ -107,12 +114,12 @@ int main()
 	//file read and setup
 	string commands;
 	string othercommands;
-	for (size_t i = 0; i < 4; i++)
+	for (size_t i = 0; i < 5; i++)
 	{
 		othercommands = "";
 		
 		int tempLen = rand() % 5;
-		switch (rand() & 6)
+		switch (rand() % 6)
 		{
 			case 0:
 				othercommands.append(">");
@@ -133,6 +140,8 @@ int main()
 				othercommands.append(",");
 				break;
 			default:
+				// if a player create a Canvas that excceds the agreed apon loop limit. The Canvas will be discarded for the current duel.
+				// When either one of the players has unreachable Canvases, or the turn Count Execceds the Max allowed, resulting in a draw
 			break;
 		}
 	}
@@ -141,13 +150,15 @@ int main()
 	stack<int> stack;
 	
 	//readInput(commands);
-	readFile(commands, "duel.bf");
+	//readFile(commands, "duel.bf");
 
 	//compile
 	int selfPointer = 0;
 	vector<unsigned char> SelfMemCell(8); //common memory size: 8
 
 	//vanilla_compiler(&commands, &stack, &memCell);
+
+
 
 	int otherPointer = 0;
 	vector<unsigned char> otherMemCell(8);
@@ -158,42 +169,80 @@ int main()
 	{
 		turn++;
 		// commands should be loaded from a directory of Canvases
-		
+		int selfTurnCharge = 0, otherTurnCharge = 0;
 
 		if (turn >= commands.size())
 		{
 			if (turn % 2)
 			{
-				scaling_rgba_compiler(selfPointer, &commands, &stack, &SelfMemCell, &otherMemCell);
+				// load the Canvas commands
 
 				switch ((int)SelfMemCell[selfPointer])
 				{
 					case 0:
 						readFile(commands, "0.bf");
+						
 						break;
 					case 1:
 						readFile(commands, "1.bf");
+						
 						break;
 					case 2:
 						readFile(commands, "2.bf");
+						
 						break;
 					case 3:
 						readFile(commands, "3.bf");
+						
 						break;
 					case 4:
 						readFile(commands, "4.bf");
+						
 						break;
 					default:
-						cout << SelfMemCell[selfPointer];
+						
 						break;
 				}
+
+				cout << endl << "turn #" << turn << endl;
+				for (; selfPointer < commands.size(); selfPointer++)
+				{
+					if (selfTurnCharge >= commands.size())
+					{
+						cout << "slot " << selfPointer;
+						scaling_rgba_compiler(selfPointer, &commands, &stack, &SelfMemCell, &otherMemCell);
+						cout << ", compiled: " << commands << endl;
+					}
+					else
+					{
+						cout << "turnCharge is to low for this canvas and will remain dormant for " << commands.size() - selfTurnCharge <<
+							(commands.size() - selfTurnCharge > 1) ? "turns." : "turn.";
+					}
+				}
+				
+				selfTurnCharge = turn + 1;
 			}
 			else
 			{
-				scaling_rgba_compiler(otherPointer, &commands, &stack, &otherMemCell, &SelfMemCell);
-
+				for (; otherPointer < commands.size(); otherPointer++)
+				{
+					cout << endl << "turn #" << turn << endl;
+					if (otherTurnCharge >= commands.size())
+					{
+						scaling_rgba_compiler(otherPointer, &commands, &stack, &otherMemCell, &SelfMemCell);
+						otherPointer++;
+					}
+					else
+					{
+						cout << "turnCharge is to low for this canvas and will remain dormant for " << commands.size() - otherTurnCharge <<
+							(commands.size() - otherTurnCharge > 1) ? "turns." : "turn.";
+					}
+				}
+					
+				otherTurnCharge = turn + 1;
 			}
 		}
+		cin.get();
 	}
 }
 
@@ -247,14 +296,18 @@ void vanilla_compiler(string* commands, stack<int>* stack, vector<unsigned char>
 				stack->pop();
 			greenLight = true;
 		}
-		debug(memCell, nullptr, pointer);
+		//debug(memCell, nullptr, pointer);
 	}
 }
 
 void scaling_rgba_compiler(const int INIT_INDEX, string* commands, stack<int>* stack, vector<unsigned char>* selfMemCell, vector<unsigned char>* otherMemCell)
 {
+	const int MAX_LAP = 256;
 	long long pointer = INIT_INDEX;
+
 	bool greenLight = true;
+	int runningLoopCountRaw = 0; // ignores scope depth
+
 	for (size_t runtimePos = 0; runtimePos < commands->size(); runtimePos++)
 	{
 		if (greenLight)
@@ -297,12 +350,19 @@ void scaling_rgba_compiler(const int INIT_INDEX, string* commands, stack<int>* s
 		}
 		if ((*commands)[runtimePos] == ']')
 		{
-			if ((*selfMemCell)[pointer])
+			if ((*selfMemCell)[pointer] && runningLoopCountRaw < MAX_LAP)
+			{
 				runtimePos = stack->top();
+				runningLoopCountRaw++;
+			}
 			else
+			{
 				stack->pop();
+				runningLoopCountRaw = 0;
+			}
 			greenLight = true;
 		}
-		debug(selfMemCell, otherMemCell, pointer);
-	}
+	} // end of command loop
+
+	debug(selfMemCell, otherMemCell, pointer);
 }
